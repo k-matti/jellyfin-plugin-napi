@@ -1,36 +1,25 @@
 using System;
-using System.Collections.Generic;
-using Jellyfin.Plugin.Template.Configuration;
+using Jellyfin.Plugin.NapiSub.Configuration;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
-using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 
-namespace Jellyfin.Plugin.Template
+namespace Jellyfin.Plugin.NapiSub
 {
-    public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
+    public class Plugin : BasePlugin<PluginConfiguration>
     {
-        public override string Name => "Template";
+        public override Guid Id => new Guid("6F9A84BF-CB2F-42C3-9F07-4037956F9A02");
 
-        public override Guid Id => Guid.Parse("eb5d7894-8eef-4b36-aa6f-5d124e828ce1");
+        public override string Name => "NapiSub";
 
-        public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer) : base(applicationPaths, xmlSerializer)
-        {
-            Instance = this;
-        }
+        public override string Description => "Download subtitles for Movies and TV Shows using napiprojekt.pl database";
 
         public static Plugin Instance { get; private set; }
 
-        public IEnumerable<PluginPageInfo> GetPages()
+        public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer) : base(applicationPaths,
+            xmlSerializer)
         {
-            return new[]
-            {
-                new PluginPageInfo
-                {
-                    Name = this.Name,
-                    EmbeddedResourcePath = string.Format("{0}.Configuration.configPage.html", GetType().Namespace)
-                }
-            };
+            Instance = this;
         }
     }
 }
