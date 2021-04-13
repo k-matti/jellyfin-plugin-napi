@@ -1,17 +1,17 @@
-﻿using MediaBrowser.Controller.Providers;
-using MediaBrowser.Controller.Subtitles;
-using MediaBrowser.Model.IO;
-using MediaBrowser.Model.Providers;
-using Jellyfin.Plugin.NapiSub.Core;
-using Jellyfin.Plugin.NapiSub.Helpers;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using System;
+using Jellyfin.Plugin.NapiSub.Core;
+using Jellyfin.Plugin.NapiSub.Helpers;
+using MediaBrowser.Controller.Providers;
+using MediaBrowser.Controller.Subtitles;
 using MediaBrowser.Model.Globalization;
+using MediaBrowser.Model.IO;
+using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
-using System.Net.Http;
 
 namespace Jellyfin.Plugin.NapiSub.Provider
 {
@@ -22,7 +22,7 @@ namespace Jellyfin.Plugin.NapiSub.Provider
         private readonly IFileSystem _fileSystem;
         private ILocalizationManager _localizationManager;
 
-        public NapiSubProvider(Logger<NapiSubProvider> logger, IFileSystem fileSystem, HttpClient httpClient, ILocalizationManager localizationManager)
+        public NapiSubProvider(ILogger<NapiSubProvider> logger, IFileSystem fileSystem, HttpClient httpClient, ILocalizationManager localizationManager)
         {
             _logger = logger;
             _fileSystem = fileSystem;
@@ -82,7 +82,14 @@ namespace Jellyfin.Plugin.NapiSub.Provider
                 return Array.Empty<RemoteSubtitleInfo>();
             }
 
-            var hash = await NapiCore.GetHash(request.MediaPath, cancellationToken, _fileSystem, _logger);
+            var mediaPath = request.MediaPath;
+
+            _logger.LogInformation($"Reading {mediaPath}");
+
+            var hash = await NapiCore.GetHash(request.MediaPath, cancellationToken, _fileSystem);
+
+            _logger.LogInformation($"Computed hash {hash} of {mediaPath} for NapiSub");
+
             var requestMessage = NapiCore.CreateRequest(hash, language.TwoLetterISOLanguageName);
 
             try

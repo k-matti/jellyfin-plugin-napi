@@ -5,7 +5,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using System.Net.Http;
 using System.IO;
 using System;
@@ -14,10 +13,9 @@ namespace Jellyfin.Plugin.NapiSub.Core
 {
     public static class NapiCore
     {
-        public static async Task<string> GetHash(string path, CancellationToken cancellationToken, IFileSystem fileSystem, ILogger logger)
+        public static async Task<string> GetHash(string path, CancellationToken cancellationToken, IFileSystem fileSystem)
         {
             var buffer = new byte[10485760];
-            logger.LogInformation($"Reading {path}");
 
             using (var fileStream = File.OpenRead(path))
             {
@@ -30,7 +28,6 @@ namespace Jellyfin.Plugin.NapiSub.Core
                 hash = ToHex(md5.ComputeHash(buffer));
             }
 
-            logger.LogInformation($"Computed hash {hash} of {path} for NapiSub");
             return hash;
         }
 
