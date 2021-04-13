@@ -39,26 +39,26 @@ namespace Jellyfin.Plugin.NapiSub.Provider
             {
                 using (var response = await _httpClient.SendAsync(request).ConfigureAwait(false))
                 {
-                    using (var reader = new StreamReader(await response.Content.ReadAsStringAsync()))
+                    var xml = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    var status = XmlParser.GetStatusFromXml(xml);
+
+                    _logger.LogInformation($"Response status: {status}");
+
+                    if (status != null && status == "success")
                     {
-                        var xml = await reader.ReadToEndAsync().ConfigureAwait(false);
-                        var status = XmlParser.GetStatusFromXml(xml);
+                        var subtitlesBase64 = XmlParser.GetSubtitlesBase64(xml);
+                        var stream = XmlParser.GetSubtitlesStream(subtitlesBase64);
+                        var subRip = SubtitlesConverter.ConvertToSubRipStream(stream);
 
-                        if (status != null && status == "success")
+                        if (subRip != null)
                         {
-                            var subtitlesBase64 = XmlParser.GetSubtitlesBase64(xml);
-                            var stream = XmlParser.GetSubtitlesStream(subtitlesBase64);
-                            var subRip = SubtitlesConverter.ConvertToSubRipStream(stream);
-
-                            if (subRip != null)
+                            return new SubtitleResponse
                             {
-                                return new SubtitleResponse
-                                {
-                                    Format = "srt",
-                                    Language = "PL",
-                                    Stream = subRip
-                                };
-                            }
+                                Format = "srt",
+                                Language = "PL",
+                                Stream = subRip
+                            };
                         }
                     }
                 }
@@ -96,16 +96,17 @@ namespace Jellyfin.Plugin.NapiSub.Provider
             {
                 using (var response = await _httpClient.SendAsync(requestMessage).ConfigureAwait(false))
                 {
-                    using (var reader = new StreamReader(await response.Content.ReadAsStringAsync()))
+                    var xml = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    var status = XmlParser.GetStatusFromXml(xml);
+
+                    _logger.LogInformation($"Response status: {status}");
+
+                    if (status != null && status == "success")
                     {
-                        var xml = await reader.ReadToEndAsync().ConfigureAwait(false);
-                        var status = XmlParser.GetStatusFromXml(xml);
+                        _logger.LogInformation("Subtitles found by NapiSub");
 
-                        if (status != null && status == "success")
-                        {
-                            _logger.LogInformation("Subtitles found by NapiSub");
-
-                            return new List<RemoteSubtitleInfo>
+                        return new List<RemoteSubtitleInfo>
                             {
                                 new RemoteSubtitleInfo
                                 {
@@ -117,7 +118,6 @@ namespace Jellyfin.Plugin.NapiSub.Provider
                                     Format = "srt"
                                 }
                             };
-                        }
                     }
 
                     _logger.LogInformation("No subtitles found by NapiSub");
